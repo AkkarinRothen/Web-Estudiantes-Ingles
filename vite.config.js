@@ -5,4 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   base: '/Web-Estudiantes-Ingles/',
+  build: {
+    outDir: 'docs', // Allows deploying via GitHub Pages directly from /docs or GitHub Actions
+  },
 });
