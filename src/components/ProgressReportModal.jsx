@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, Award, Star, Flame, Trophy, Download, Printer, CheckCircle2, BookOpen } from 'lucide-react';
-import { BADGES } from '../utils/progressStore';
+import { X, Award, Star, Flame, Trophy, Download, Printer, CheckCircle2, BookOpen, FileSpreadsheet, Sparkles, Lightbulb } from 'lucide-react';
+import { BADGES, exportProgressCSV } from '../utils/progressStore';
 
 export default function ProgressReportModal({ progress, onClose, onUpdateName }) {
   const [studentName, setStudentName] = useState(progress.studentName || 'Estudiante');
@@ -25,12 +25,43 @@ export default function ProgressReportModal({ progress, onClose, onUpdateName })
     downloadAnchor.remove();
   };
 
+  const handleExportCSV = () => {
+    const csvData = exportProgressCSV(progress);
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", url);
+    downloadAnchor.setAttribute("download", `analitica_ingles_${studentName.toLowerCase().replace(/\s+/g, '_')}.csv`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
   const unitTitles = {
     'unit-1': 'Unidad 1: Sujetos y Pronombres',
     'unit-2': 'Unidad 2: Verbos de Acción',
     'unit-3': 'Unidad 3: La Oración Simple',
     'unit-4': 'Unidad 4: Habilidades (Can & Can\'t)'
   };
+
+  // Identify strengths and areas for improvement
+  const getPedagogicalInsights = () => {
+    const strengths = [];
+    const improvements = [];
+
+    ['unit-1', 'unit-2', 'unit-3', 'unit-4'].forEach(uId => {
+      const uProg = progress.unitProgress?.[uId];
+      if (uProg?.mastered || (uProg?.percentage || 0) >= 90) {
+        strengths.push(unitTitles[uId].split(':')[1].trim());
+      } else if ((uProg?.percentage || 0) < 60 && (uProg?.levelsCompleted?.length || 0) > 0) {
+        improvements.push(unitTitles[uId].split(':')[1].trim());
+      }
+    });
+
+    return { strengths, improvements };
+  };
+
+  const insights = getPedagogicalInsights();
 
   return (
     <div className="report-modal-overlay animate-fade-in" role="dialog" aria-modal="true">
@@ -57,7 +88,7 @@ export default function ProgressReportModal({ progress, onClose, onUpdateName })
           <div className="report-student-card">
             <div className="student-info-left">
               <div className="student-avatar-badge">
-                <Trophy size={32} className="text-amber-500" />
+                <span style={{ fontSize: '2rem' }}>{progress.avatar || '🎓'}</span>
               </div>
               <div>
                 <div className="student-name-row">
@@ -118,11 +149,38 @@ export default function ProgressReportModal({ progress, onClose, onUpdateName })
             </div>
           </div>
 
+          {/* Pedagogical Insights Box */}
+          <div className="report-insights-box">
+            <div className="insights-row">
+              <div className="insight-col">
+                <div className="flex items-center gap-1 text-emerald-600 font-bold text-sm mb-1">
+                  <Sparkles size={16} /> Fortalezas Consolidadas:
+                </div>
+                <p className="text-xs text-secondary">
+                  {insights.strengths.length > 0
+                    ? insights.strengths.join(', ')
+                    : 'Avanzando en las primeras actividades de la ruta.'}
+                </p>
+              </div>
+
+              <div className="insight-col">
+                <div className="flex items-center gap-1 text-amber-600 font-bold text-sm mb-1">
+                  <Lightbulb size={16} /> Áreas Recomendadas de Refuerzo:
+                </div>
+                <p className="text-xs text-secondary">
+                  {insights.improvements.length > 0
+                    ? insights.improvements.join(', ')
+                    : 'Mantén la práctica continua para consolidar las siguientes unidades.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Progress per Unit */}
           <div className="report-section">
             <h4 className="report-section-title">
               <BookOpen size={18} />
-              <span>Avance por Unidades de Aprendizaje</span>
+              <span>Avance y Dominio por Unidades de Aprendizaje</span>
             </h4>
 
             <div className="report-units-list">
@@ -142,7 +200,7 @@ export default function ProgressReportModal({ progress, onClose, onUpdateName })
                     </div>
                     <div className="unit-levels-tag">
                       {(uProg.levelsCompleted || []).length} de 3 niveles completados
-                      {uProg.percentage === 100 && ' — ¡Completada con éxito! ✅'}
+                      {uProg.mastered && ' • 🏆 ¡Dominio Certificado en Desafío Maestro!'}
                     </div>
                   </div>
                 );
@@ -179,13 +237,23 @@ export default function ProgressReportModal({ progress, onClose, onUpdateName })
           </div>
         </div>
 
-        {/* Modal Action Buttons */}
-        <div className="report-footer-actions no-print">
+        {/* Modal Action Buttons with CSV export for teachers */}
+        <div className="report-footer-actions no-print flex-wrap">
           <button
             type="button"
-            className="btn-outline"
+            className="btn-outline flex-1"
+            onClick={handleExportCSV}
+            title="Descargar datos en CSV para Google Sheets / Excel"
+          >
+            <FileSpreadsheet size={18} className="text-emerald-500" />
+            <span>Descargar CSV (Docente)</span>
+          </button>
+
+          <button
+            type="button"
+            className="btn-outline flex-1"
             onClick={handleExportJSON}
-            title="Descargar copia de seguridad en JSON"
+            title="Descargar copia de respaldo en JSON"
           >
             <Download size={18} />
             <span>Descargar JSON</span>
@@ -193,12 +261,12 @@ export default function ProgressReportModal({ progress, onClose, onUpdateName })
 
           <button
             type="button"
-            className="btn-primary"
+            className="btn-primary flex-1"
             onClick={handlePrint}
             title="Imprimir o Guardar como PDF"
           >
             <Printer size={18} />
-            <span>Imprimir / Guardar en PDF</span>
+            <span>Imprimir / PDF</span>
           </button>
         </div>
       </div>

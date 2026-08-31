@@ -6,6 +6,7 @@ export default function Header({
   theme, 
   toggleTheme, 
   onOpenReport,
+  onOpenProfiles,
   setActiveTab
 }) {
   return (
@@ -21,6 +22,18 @@ export default function Header({
       </div>
 
       <div className="header-actions">
+        {/* Profile Switcher Trigger */}
+        <button
+          type="button"
+          className="header-profile-btn"
+          onClick={onOpenProfiles}
+          title="Cambiar o Administrar Perfiles de Alumnos"
+          aria-label="Cambiar o Administrar Perfiles"
+        >
+          <span className="profile-btn-avatar">{progress.avatar || '🎓'}</span>
+          <span className="profile-btn-name hide-mobile-sm">{progress.studentName || 'Estudiante'}</span>
+        </button>
+
         {/* Streak indicator */}
         <div className="header-streak-badge" title="Racha de días de práctica consecutivos">
           <Flame size={17} className="text-orange-500" fill="currentColor" />

@@ -1,7 +1,9 @@
-// Centralized progress and gamification store with LocalStorage persistence
+// Centralized multi-profile progress and gamification store with LocalStorage persistence
 
-const STORAGE_KEY = 'english_student_progress_v2';
+const PROFILES_LIST_KEY = 'english_student_profiles_list';
+const ACTIVE_PROFILE_KEY = 'english_student_active_profile_id';
 const LEGACY_STARS_KEY = 'english_app_stars';
+const HAS_SEEN_ONBOARDING_KEY = 'english_student_seen_onboarding';
 
 export const BADGES = [
   {
@@ -20,29 +22,29 @@ export const BADGES = [
   },
   {
     id: 'subject_master',
-    name: 'Experto en Sujetos',
-    desc: 'Dominaste la Unidad 1 de Pronombres y Sujetos',
+    name: 'Maestría en Sujetos',
+    desc: 'Superaste el Desafío Maestro de la Unidad 1 con ≥70% de precisión',
     icon: 'Crown',
     color: '#8b5cf6'
   },
   {
     id: 'action_hero',
-    name: 'Héroe de la Acción',
-    desc: 'Dominaste la Unidad 2 de Verbos de Acción',
+    name: 'Maestría en Acciones',
+    desc: 'Superaste el Desafío Maestro de la Unidad 2 con ≥70% de precisión',
     icon: 'Zap',
     color: '#10b981'
   },
   {
     id: 'sentence_architect',
-    name: 'Arquitecto de Oraciones',
-    desc: 'Dominaste la Unidad 3 de Oraciones Simples',
+    name: 'Maestría en Oraciones',
+    desc: 'Superaste el Desafío Maestro de la Unidad 3 con ≥70% de precisión',
     icon: 'Layers',
     color: '#ec4899'
   },
   {
     id: 'can_do_attitude',
-    name: '¡Yo Puedo! (Can & Can\'t)',
-    desc: 'Dominaste la Unidad 4 de Habilidades y Modales',
+    name: 'Maestría en Habilidades',
+    desc: 'Superaste el Desafío Maestro de la Unidad 4 con ≥70% de precisión',
     icon: 'Sparkles',
     color: '#eab308'
   },
@@ -62,53 +64,137 @@ export const BADGES = [
   }
 ];
 
-export const getInitialProgress = () => {
+export const getInitialProfile = (name = 'Estudiante', id = null) => {
+  const profileId = id || `profile_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const legacyStars = parseInt(localStorage.getItem(LEGACY_STARS_KEY) || '0', 10);
   
   return {
-    studentName: 'Estudiante',
+    id: profileId,
+    studentName: name,
+    avatar: '🎓',
+    createdAt: new Date().toISOString(),
     stars: legacyStars,
     xp: legacyStars * 15,
     level: Math.floor((legacyStars * 15) / 100) + 1,
     currentStreak: 1,
     lastActiveDate: new Date().toISOString().split('T')[0],
     unitProgress: {
-      'unit-1': { completed: false, percentage: 0, levelsCompleted: [] },
-      'unit-2': { completed: false, percentage: 0, levelsCompleted: [] },
-      'unit-3': { completed: false, percentage: 0, levelsCompleted: [] },
-      'unit-4': { completed: false, percentage: 0, levelsCompleted: [] }
+      'unit-1': { completed: false, percentage: 0, levelsCompleted: [], challengeScore: null, mastered: false },
+      'unit-2': { completed: false, percentage: 0, levelsCompleted: [], challengeScore: null, mastered: false },
+      'unit-3': { completed: false, percentage: 0, levelsCompleted: [], challengeScore: null, mastered: false },
+      'unit-4': { completed: false, percentage: 0, levelsCompleted: [], challengeScore: null, mastered: false }
     },
     activityStats: {},
     unlockedBadges: legacyStars > 0 ? ['first_step'] : [],
     mistakesLog: [],
-    history: []
+    sessionsLog: [] // Array of { timestamp, unitId, levelId, correctCount, totalCount, durationSecs }
   };
+};
+
+export const getProfilesList = () => {
+  try {
+    const raw = localStorage.getItem(PROFILES_LIST_KEY);
+    if (!raw) {
+      const defaultProf = getInitialProfile('Estudiante', 'default_profile');
+      const list = [{ id: defaultProf.id, name: defaultProf.studentName, avatar: defaultProf.avatar }];
+      localStorage.setItem(PROFILES_LIST_KEY, JSON.stringify(list));
+      localStorage.setItem(ACTIVE_PROFILE_KEY, defaultProf.id);
+      saveProfileData(defaultProf);
+      return list;
+    }
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Error reading profiles list:', e);
+    return [{ id: 'default_profile', name: 'Estudiante', avatar: '🎓' }];
+  }
+};
+
+export const getActiveProfileId = () => {
+  const activeId = localStorage.getItem(ACTIVE_PROFILE_KEY);
+  if (activeId) return activeId;
+  const list = getProfilesList();
+  const firstId = list[0]?.id || 'default_profile';
+  localStorage.setItem(ACTIVE_PROFILE_KEY, firstId);
+  return firstId;
+};
+
+export const saveProfileData = (profileData) => {
+  try {
+    const profileKey = `english_profile_data_${profileData.id}`;
+    localStorage.setItem(profileKey, JSON.stringify(profileData));
+    
+    // Keep profiles list metadata updated
+    const list = getProfilesList();
+    const idx = list.findIndex(p => p.id === profileData.id);
+    if (idx !== -1) {
+      list[idx] = { id: profileData.id, name: profileData.studentName, avatar: profileData.avatar || '🎓' };
+    } else {
+      list.push({ id: profileData.id, name: profileData.studentName, avatar: profileData.avatar || '🎓' });
+    }
+    localStorage.setItem(PROFILES_LIST_KEY, JSON.stringify(list));
+    localStorage.setItem(LEGACY_STARS_KEY, (profileData.stars || 0).toString());
+  } catch (e) {
+    console.error('Error saving profile data:', e);
+  }
 };
 
 export const loadProgress = () => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const activeId = getActiveProfileId();
+    const profileKey = `english_profile_data_${activeId}`;
+    const raw = localStorage.getItem(profileKey);
     if (!raw) {
-      const initial = getInitialProgress();
-      saveProgress(initial);
+      const initial = getInitialProfile('Estudiante', activeId);
+      saveProfileData(initial);
       return initial;
     }
     const parsed = JSON.parse(raw);
-    return { ...getInitialProgress(), ...parsed };
+    return { ...getInitialProfile(parsed.studentName || 'Estudiante', activeId), ...parsed };
   } catch (e) {
-    console.error('Error loading progress:', e);
-    return getInitialProgress();
+    console.error('Error loading active profile:', e);
+    return getInitialProfile('Estudiante', 'default_profile');
   }
 };
 
 export const saveProgress = (progress) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-    // Keep legacy stars in sync for backward compatibility
-    localStorage.setItem(LEGACY_STARS_KEY, (progress.stars || 0).toString());
-  } catch (e) {
-    console.error('Error saving progress:', e);
+  saveProfileData(progress);
+};
+
+export const createNewProfile = (studentName, avatar = '⭐') => {
+  const newProf = getInitialProfile(studentName);
+  newProf.avatar = avatar;
+  saveProfileData(newProf);
+  localStorage.setItem(ACTIVE_PROFILE_KEY, newProf.id);
+  return newProf;
+};
+
+export const switchActiveProfile = (profileId) => {
+  localStorage.setItem(ACTIVE_PROFILE_KEY, profileId);
+  return loadProgress();
+};
+
+export const deleteProfile = (profileId) => {
+  let list = getProfilesList();
+  list = list.filter(p => p.id !== profileId);
+  localStorage.removeItem(`english_profile_data_${profileId}`);
+  
+  if (list.length === 0) {
+    const fallback = getInitialProfile('Estudiante', 'default_profile');
+    list = [{ id: fallback.id, name: fallback.studentName, avatar: fallback.avatar }];
+    saveProfileData(fallback);
   }
+  
+  localStorage.setItem(PROFILES_LIST_KEY, JSON.stringify(list));
+  localStorage.setItem(ACTIVE_PROFILE_KEY, list[0].id);
+  return loadProgress();
+};
+
+export const hasSeenOnboarding = () => {
+  return localStorage.getItem(HAS_SEEN_ONBOARDING_KEY) === 'true';
+};
+
+export const markOnboardingAsSeen = () => {
+  localStorage.setItem(HAS_SEEN_ONBOARDING_KEY, 'true');
 };
 
 export const updateStreak = (currentProgress) => {
@@ -120,7 +206,7 @@ export const updateStreak = (currentProgress) => {
   }
 
   if (last === today) {
-    return currentProgress; // Already counted today
+    return currentProgress;
   }
 
   const lastDate = new Date(last);
@@ -131,7 +217,7 @@ export const updateStreak = (currentProgress) => {
   if (diffDays === 1) {
     newStreak += 1;
   } else if (diffDays > 1) {
-    newStreak = 1; // Reset streak
+    newStreak = 1;
   }
 
   let unlockedBadges = [...(currentProgress.unlockedBadges || [])];
@@ -158,7 +244,8 @@ export const recordActivityAttempt = ({
   totalCount,
   starsEarned = 0,
   xpEarned = 0,
-  mistakes = []
+  mistakes = [],
+  isMasterChallenge = false
 }) => {
   let progress = loadProgress();
   progress = updateStreak(progress);
@@ -166,6 +253,7 @@ export const recordActivityAttempt = ({
   const newStars = (progress.stars || 0) + starsEarned;
   const newXp = (progress.xp || 0) + xpEarned;
   const newLevel = Math.floor(newXp / 100) + 1;
+  const accuracy = Math.round((correctCount / (totalCount || 1)) * 100);
 
   let unlockedBadges = [...(progress.unlockedBadges || [])];
   if (!unlockedBadges.includes('first_step')) {
@@ -175,33 +263,56 @@ export const recordActivityAttempt = ({
     unlockedBadges.push('perfect_score');
   }
 
-  // Update unit progress
+  // Update unit progress & challenges
   const unitProgress = { ...progress.unitProgress };
   if (unitId) {
-    const currentUnit = unitProgress[unitId] || { completed: false, percentage: 0, levelsCompleted: [] };
+    const currentUnit = unitProgress[unitId] || { completed: false, percentage: 0, levelsCompleted: [], challengeScore: null, mastered: false };
     const levelsCompleted = new Set(currentUnit.levelsCompleted || []);
-    if (levelId && correctCount >= Math.ceil(totalCount * 0.6)) {
+    
+    if (levelId && accuracy >= 60 && !isMasterChallenge) {
       levelsCompleted.add(levelId);
+    }
+
+    let isMastered = currentUnit.mastered || false;
+    let challengeScore = currentUnit.challengeScore;
+
+    if (isMasterChallenge) {
+      challengeScore = accuracy;
+      if (accuracy >= 70) {
+        isMastered = true;
+        // Grant unit mastery badge
+        if (unitId === 'unit-1' && !unlockedBadges.includes('subject_master')) unlockedBadges.push('subject_master');
+        if (unitId === 'unit-2' && !unlockedBadges.includes('action_hero')) unlockedBadges.push('action_hero');
+        if (unitId === 'unit-3' && !unlockedBadges.includes('sentence_architect')) unlockedBadges.push('sentence_architect');
+        if (unitId === 'unit-4' && !unlockedBadges.includes('can_do_attitude')) unlockedBadges.push('can_do_attitude');
+      }
     }
 
     const totalLevels = 3;
     const completedCount = levelsCompleted.size;
-    const percentage = Math.min(100, Math.round((completedCount / totalLevels) * 100));
+    let percentage = Math.min(90, Math.round((completedCount / totalLevels) * 90));
+    if (isMastered) percentage = 100;
 
     unitProgress[unitId] = {
-      completed: percentage === 100,
+      completed: percentage >= 90,
       percentage,
-      levelsCompleted: Array.from(levelsCompleted)
+      levelsCompleted: Array.from(levelsCompleted),
+      challengeScore,
+      mastered: isMastered
     };
-
-    // Check unit mastery badges
-    if (percentage === 100) {
-      if (unitId === 'unit-1' && !unlockedBadges.includes('subject_master')) unlockedBadges.push('subject_master');
-      if (unitId === 'unit-2' && !unlockedBadges.includes('action_hero')) unlockedBadges.push('action_hero');
-      if (unitId === 'unit-3' && !unlockedBadges.includes('sentence_architect')) unlockedBadges.push('sentence_architect');
-      if (unitId === 'unit-4' && !unlockedBadges.includes('can_do_attitude')) unlockedBadges.push('can_do_attitude');
-    }
   }
+
+  // Record Session Log for teachers / study evaluation
+  const sessionsLog = [...(progress.sessionsLog || [])];
+  sessionsLog.push({
+    timestamp: new Date().toISOString(),
+    unitId: unitId || 'general',
+    levelId: levelId || activityId,
+    correctCount,
+    totalCount,
+    accuracy,
+    isMasterChallenge: !!isMasterChallenge
+  });
 
   // Update mistake log
   let mistakesLog = [...(progress.mistakesLog || [])];
@@ -218,7 +329,7 @@ export const recordActivityAttempt = ({
   const currentStat = activityStats[activityId] || { attempts: 0, bestScore: 0 };
   activityStats[activityId] = {
     attempts: currentStat.attempts + 1,
-    bestScore: Math.max(currentStat.bestScore, Math.round((correctCount / (totalCount || 1)) * 100)),
+    bestScore: Math.max(currentStat.bestScore, accuracy),
     lastPlayed: new Date().toISOString()
   };
 
@@ -230,6 +341,7 @@ export const recordActivityAttempt = ({
     unlockedBadges,
     unitProgress,
     mistakesLog,
+    sessionsLog: sessionsLog.slice(-50), // keep last 50 session records
     activityStats
   };
 
@@ -237,40 +349,51 @@ export const recordActivityAttempt = ({
   return updatedProgress;
 };
 
-export const clearResolvedMistake = (mistakeId) => {
-  let progress = loadProgress();
-  const filtered = (progress.mistakesLog || []).filter(m => m.id !== mistakeId);
-  let unlockedBadges = [...(progress.unlockedBadges || [])];
-  if (!unlockedBadges.includes('error_slayer')) {
-    unlockedBadges.push('error_slayer');
+export const exportProgressCSV = (progress) => {
+  const headers = ['Estudiante', 'Fecha Sesion', 'Unidad / Nivel', 'Aciertos', 'Total', 'Precision %', 'Es Desafio Final', 'Racha Actual', 'Nivel XP'];
+  const rows = [];
+  
+  const student = `"${progress.studentName || 'Estudiante'}"`;
+  const streak = progress.currentStreak || 1;
+  const lvl = progress.level || 1;
+
+  if (progress.sessionsLog && progress.sessionsLog.length > 0) {
+    progress.sessionsLog.forEach(s => {
+      rows.push([
+        student,
+        `"${new Date(s.timestamp).toLocaleDateString()} ${new Date(s.timestamp).toLocaleTimeString()}"`,
+        `"${s.unitId || 'General'}: ${s.levelId}"`,
+        s.correctCount,
+        s.totalCount,
+        `${s.accuracy}%`,
+        s.isMasterChallenge ? 'SI' : 'NO',
+        streak,
+        lvl
+      ]);
+    });
+  } else {
+    rows.push([
+      student,
+      `"${new Date().toLocaleDateString()}"`,
+      '"Sin sesiones registradas aun"',
+      0, 0, '0%', 'NO', streak, lvl
+    ]);
   }
-  const updated = {
-    ...progress,
-    mistakesLog: filtered,
-    unlockedBadges
-  };
-  saveProgress(updated);
-  return updated;
+
+  const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  return csvContent;
 };
 
-export const generateStudentReport = (studentName = 'Estudiante') => {
-  const progress = loadProgress();
-  const date = new Date().toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-
-  return {
-    studentName: studentName || progress.studentName || 'Estudiante',
-    date,
-    level: progress.level,
-    xp: progress.xp,
-    stars: progress.stars,
-    streak: progress.currentStreak,
-    unitProgress: progress.unitProgress,
-    badges: BADGES.filter(b => (progress.unlockedBadges || []).includes(b.id)),
-    totalMistakesToReview: (progress.mistakesLog || []).length,
-    activityStats: progress.activityStats
-  };
+export const importProfileBackup = (jsonString) => {
+  try {
+    const data = JSON.parse(jsonString);
+    if (!data.id || !data.studentName) {
+      throw new Error('Formato de perfil invalido.');
+    }
+    saveProfileData(data);
+    localStorage.setItem(ACTIVE_PROFILE_KEY, data.id);
+    return { success: true, profile: data };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 };

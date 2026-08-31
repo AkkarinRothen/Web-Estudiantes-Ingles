@@ -19,6 +19,7 @@ import {
 export default function LearningPathView({
   progress,
   onStartLevel,
+  onStartChallenge,
   onOpenReport,
   onOpenTheory,
   onOpenVocab
@@ -28,16 +29,20 @@ export default function LearningPathView({
   // Find the next recommended activity
   const getNextRecommended = () => {
     for (const unit of LEARNING_UNITS) {
-      const uProg = (progress.unitProgress && progress.unitProgress[unit.id]) || { levelsCompleted: [] };
+      const uProg = (progress.unitProgress && progress.unitProgress[unit.id]) || { levelsCompleted: [], mastered: false };
       const completedSet = new Set(uProg.levelsCompleted || []);
       
       for (const lvl of unit.levels) {
         if (!completedSet.has(lvl.id)) {
-          return { unit, level: lvl };
+          return { unit, level: lvl, isChallenge: false };
         }
       }
+
+      // If all levels completed but not yet mastered challenge
+      if (!uProg.mastered && unit.masterChallenge) {
+        return { unit, level: unit.masterChallenge, isChallenge: true };
+      }
     }
-    // If all completed, recommend unit 1 level 3 for mastery
     return { unit: LEARNING_UNITS[0], level: LEARNING_UNITS[0].levels[0], allDone: true };
   };
 
@@ -57,7 +62,9 @@ export default function LearningPathView({
               <Flame size={15} fill="currentColor" /> {progress.currentStreak || 1} días de racha
             </span>
           </div>
-          <h2 className="path-hero-title">¡Hola, {progress.studentName || 'Estudiante'}! 👋</h2>
+          <h2 className="path-hero-title">
+            ¡Hola, {progress.studentName || 'Estudiante'} {progress.avatar || '🎓'}!
+          </h2>
           <p className="path-hero-sub">
             Sigue tu ruta de inglés paso a paso o repasa los temas que más te gusten.
           </p>
@@ -81,22 +88,28 @@ export default function LearningPathView({
         <div className="recommended-card animate-pulse-gentle">
           <div className="recommended-badge">
             <Sparkles size={16} />
-            <span>Siguiente Actividad Recomendada</span>
+            <span>{nextRec.isChallenge ? 'Desafío Integrador Recomendado 🏆' : 'Siguiente Actividad Recomendada'}</span>
           </div>
 
           <div className="recommended-main-content">
             <div className="rec-text-group">
               <span className="rec-unit-tag">
-                {nextRec.unit.title} • {nextRec.level.difficulty}
+                {nextRec.unit.title} • {nextRec.isChallenge ? 'Evaluación de Dominio' : nextRec.level.difficulty}
               </span>
-              <h3 className="rec-level-title">{nextRec.level.name}</h3>
+              <h3 className="rec-level-title">{nextRec.level.name || nextRec.level.title}</h3>
               <p className="rec-level-desc">{nextRec.level.description}</p>
             </div>
 
             <button
               type="button"
               className="btn-start-action"
-              onClick={() => onStartLevel(nextRec.unit, nextRec.level)}
+              onClick={() => {
+                if (nextRec.isChallenge) {
+                  onStartChallenge(nextRec.unit);
+                } else {
+                  onStartLevel(nextRec.unit, nextRec.level);
+                }
+              }}
             >
               <span>¡Comenzar ahora!</span>
               <ArrowRight size={20} />
@@ -131,20 +144,21 @@ export default function LearningPathView({
           <BookOpen size={20} className="text-indigo-500" />
           <span>Unidades de Aprendizaje (Ruta Guiada)</span>
         </h3>
-        <p className="section-desc">Completa los 3 niveles de cada unidad para dominar el tema.</p>
+        <p className="section-desc">Completa los 3 niveles y supera el Desafío Integrador Final.</p>
       </div>
 
       <div className="units-grid">
         {LEARNING_UNITS.map((unit) => {
-          const uProg = (progress.unitProgress && progress.unitProgress[unit.id]) || { percentage: 0, levelsCompleted: [] };
+          const uProg = (progress.unitProgress && progress.unitProgress[unit.id]) || { percentage: 0, levelsCompleted: [], mastered: false, challengeScore: null };
           const completedSet = new Set(uProg.levelsCompleted || []);
-          const isCompleted = uProg.percentage === 100;
+          const allLevelsDone = completedSet.size >= 3;
+          const isMastered = uProg.mastered;
           const isExpanded = selectedUnitId === unit.id;
 
           return (
             <div 
               key={unit.id} 
-              className={`unit-card ${isCompleted ? 'unit-completed' : ''} ${isExpanded ? 'unit-expanded' : ''}`}
+              className={`unit-card ${isMastered ? 'unit-completed' : ''} ${isExpanded ? 'unit-expanded' : ''}`}
             >
               {/* Unit Header */}
               <div 
@@ -161,8 +175,8 @@ export default function LearningPathView({
                 </div>
 
                 <div className="unit-progress-pill">
-                  {isCompleted ? (
-                    <span className="pill-complete"><CheckCircle2 size={16} /> 100%</span>
+                  {isMastered ? (
+                    <span className="pill-complete"><Trophy size={16} /> 100% Dominado</span>
                   ) : (
                     <span className="pill-pct">{uProg.percentage || 0}%</span>
                   )}
@@ -184,7 +198,7 @@ export default function LearningPathView({
               <div className={`unit-levels-list ${isExpanded ? 'show' : ''}`}>
                 <p className="unit-description">{unit.description}</p>
 
-                {/* Quick helpers: Vocabulary and Theory shortcuts */}
+                {/* Quick helpers */}
                 <div className="unit-helpers-row">
                   {unit.vocabCategory && onOpenVocab && (
                     <button 
@@ -248,6 +262,41 @@ export default function LearningPathView({
                       </div>
                     );
                   })}
+
+                  {/* Unit Final Challenge Item */}
+                  {unit.masterChallenge && (
+                    <div className={`level-item-row challenge-row ${isMastered ? 'challenge-mastered' : allLevelsDone ? 'challenge-unlocked' : 'challenge-locked'}`}>
+                      <div className="level-item-left">
+                        <div className="level-status-icon" style={{ background: isMastered ? 'var(--success-bg)' : 'rgba(245, 158, 11, 0.15)', color: isMastered ? 'var(--success-text)' : '#d97706' }}>
+                          <Trophy size={18} />
+                        </div>
+                        <div>
+                          <div className="level-name-row">
+                            <strong className="level-name text-amber-600">{unit.masterChallenge.title}</strong>
+                            <span className="diff-tag" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#d97706' }}>
+                              Evaluación de Unidad
+                            </span>
+                          </div>
+                          <p className="level-desc">{unit.masterChallenge.description}</p>
+                        </div>
+                      </div>
+
+                      <div className="level-item-right">
+                        <div className="level-rewards">
+                          <span className="reward-stars"><Star size={13} fill="currentColor" /> {unit.masterChallenge.stars}</span>
+                          <span className="reward-xp"><Zap size={13} fill="currentColor" /> {unit.masterChallenge.xp} XP</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="btn-play-level btn-play-action"
+                          style={{ background: 'linear-gradient(135deg, #f59e0b, #ea580c)' }}
+                          onClick={() => onStartChallenge(unit)}
+                        >
+                          {isMastered ? 'Repetir Desafío' : 'Iniciar Desafío'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

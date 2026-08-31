@@ -5,24 +5,33 @@ import VocabModule from './components/VocabModule';
 import TheoryModule from './components/TheoryModule';
 import ActivitiesModule from './components/ActivitiesModule';
 import ProgressReportModal from './components/ProgressReportModal';
+import ProfileManagerModal from './components/common/ProfileManagerModal';
+import WelcomeOnboardingModal from './components/common/WelcomeOnboardingModal';
+import UnitChallengeActivity from './components/activities/UnitChallengeActivity';
 import { 
   loadProgress, 
   saveProgress, 
   recordActivityAttempt, 
-  updateStreak 
+  updateStreak,
+  hasSeenOnboarding,
+  markOnboardingAsSeen
 } from './utils/progressStore';
 import { Compass, BookOpen, GraduationCap, Gamepad2 } from 'lucide-react';
+import { LEARNING_UNITS } from './data/learningUnits';
 
 export default function App() {
-  // Navigation tab: 'path' (Mi Ruta), 'vocab', 'theory', 'activities'
+  // Navigation tab: 'path' (Mi Ruta), 'vocab', 'theory', 'activities', 'challenge'
   const [activeTab, setActiveTab] = useState('path');
   
   // Progress & Gamification state
   const [progress, setProgress] = useState(loadProgress);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isProfilesOpen, setIsProfilesOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => !hasSeenOnboarding());
 
-  // Active level context when launched from the guided path
+  // Active level or challenge context
   const [guidedContext, setGuidedContext] = useState(null); // { unit, level }
+  const [activeChallengeUnit, setActiveChallengeUnit] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedTheoryId, setSelectedTheoryId] = useState(null);
   const [activityFilterType, setActivityFilterType] = useState(null);
@@ -41,6 +50,19 @@ export default function App() {
   // Check streaks on mount
   useEffect(() => {
     setProgress(prev => updateStreak(prev));
+  }, []);
+
+  // Global Keyboard Shortcuts (Escape closes modals)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsReportOpen(false);
+        setIsProfilesOpen(false);
+        setIsOnboardingOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const toggleTheme = () => {
@@ -68,6 +90,10 @@ export default function App() {
     });
   };
 
+  const handleProfileChanged = (newProfile) => {
+    setProgress(newProfile);
+  };
+
   // Launching a specific level from LearningPathView
   const handleStartLevel = (unit, level) => {
     setGuidedContext({ unit, level });
@@ -83,7 +109,6 @@ export default function App() {
       setDefaultActivityId('can-cant');
       setActiveTab('activities');
     } else {
-      // Map to activity ID
       const actMap = {
         'can-cant': 'can-cant',
         'structure-builder': 'structure',
@@ -98,13 +123,19 @@ export default function App() {
     }
   };
 
-  // Activity Completion Handler
+  // Launching a Unit Master Challenge
+  const handleStartChallenge = (unit) => {
+    setActiveChallengeUnit(unit);
+    setActiveTab('challenge');
+  };
+
+  // Activity or Challenge Completion Handler
   const handleActivityComplete = (result) => {
     if (!result) return;
-    const { activityId, correctCount, totalCount, starsEarned, xpEarned, mistakes } = result;
+    const { activityId, correctCount, totalCount, starsEarned, xpEarned, mistakes, isMasterChallenge } = result;
 
-    const unitId = guidedContext?.unit?.id;
-    const levelId = guidedContext?.level?.id;
+    const unitId = guidedContext?.unit?.id || activeChallengeUnit?.id;
+    const levelId = guidedContext?.level?.id || activeChallengeUnit?.masterChallenge?.id;
 
     const updated = recordActivityAttempt({
       unitId,
@@ -114,15 +145,29 @@ export default function App() {
       totalCount,
       starsEarned,
       xpEarned,
-      mistakes
+      mistakes,
+      isMasterChallenge
     });
 
     setProgress(updated);
   };
 
+  // Onboarding action: start first lesson
+  const handleStartFirstLessonFromOnboarding = () => {
+    markOnboardingAsSeen();
+    setIsOnboardingOpen(false);
+    handleStartLevel(LEARNING_UNITS[0], LEARNING_UNITS[0].levels[0]);
+  };
+
+  const handleCloseOnboarding = () => {
+    markOnboardingAsSeen();
+    setIsOnboardingOpen(false);
+  };
+
   // Return to Path view
   const handleBackToPath = () => {
     setGuidedContext(null);
+    setActiveChallengeUnit(null);
     setActiveTab('path');
   };
 
@@ -133,6 +178,7 @@ export default function App() {
         theme={theme} 
         toggleTheme={toggleTheme} 
         onOpenReport={() => setIsReportOpen(true)}
+        onOpenProfiles={() => setIsProfilesOpen(true)}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
       />
@@ -143,6 +189,7 @@ export default function App() {
           type="button"
           onClick={() => {
             setGuidedContext(null);
+            setActiveChallengeUnit(null);
             setActiveTab('path');
           }} 
           className={`nav-tab ${activeTab === 'path' ? 'active' : ''}`}
@@ -194,6 +241,7 @@ export default function App() {
           <LearningPathView 
             progress={progress}
             onStartLevel={handleStartLevel}
+            onStartChallenge={handleStartChallenge}
             onOpenReport={() => setIsReportOpen(true)}
             onOpenTheory={(theoryId) => {
               setSelectedTheoryId(theoryId);
@@ -230,15 +278,44 @@ export default function App() {
             onBackToPath={guidedContext ? handleBackToPath : null}
           />
         )}
+
+        {activeTab === 'challenge' && activeChallengeUnit && (
+          <div className="unit-challenge-page animate-fade-in">
+            <div style={{ marginBottom: '1rem' }}>
+              <button
+                type="button"
+                className="btn-back-path"
+                onClick={handleBackToPath}
+              >
+                ← Volver a Mi Ruta
+              </button>
+            </div>
+
+            <UnitChallengeActivity 
+              unit={activeChallengeUnit}
+              addStars={addStars}
+              onComplete={handleActivityComplete}
+              onOpenTheory={(theoryId) => {
+                setSelectedTheoryId(theoryId);
+                setActiveTab('theory');
+              }}
+              onOpenVocab={(category) => {
+                setSelectedCategory(category);
+                setActiveTab('vocab');
+              }}
+            />
+          </div>
+        )}
       </main>
 
       {/* Mobile Fixed Bottom Navigation Bar */}
       <nav className="mobile-bottom-nav">
         <button
           type="button"
-          className={`bottom-nav-item ${activeTab === 'path' ? 'active' : ''}`}
+          className={`bottom-nav-item ${activeTab === 'path' || activeTab === 'challenge' ? 'active' : ''}`}
           onClick={() => {
             setGuidedContext(null);
+            setActiveChallengeUnit(null);
             setActiveTab('path');
           }}
           aria-label="Mi Ruta"
@@ -287,12 +364,29 @@ export default function App() {
         </button>
       </nav>
 
+      {/* Welcome Onboarding Modal for First Time Visitors */}
+      {isOnboardingOpen && (
+        <WelcomeOnboardingModal
+          onStartFirstLesson={handleStartFirstLessonFromOnboarding}
+          onClose={handleCloseOnboarding}
+        />
+      )}
+
       {/* Progress & Report Modal */}
       {isReportOpen && (
         <ProgressReportModal 
           progress={progress}
           onClose={() => setIsReportOpen(false)}
           onUpdateName={handleUpdateStudentName}
+        />
+      )}
+
+      {/* Profile Manager Modal */}
+      {isProfilesOpen && (
+        <ProfileManagerModal
+          currentProfile={progress}
+          onClose={() => setIsProfilesOpen(false)}
+          onProfileChanged={handleProfileChanged}
         />
       )}
     </div>
