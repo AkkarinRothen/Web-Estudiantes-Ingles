@@ -245,7 +245,8 @@ export const recordActivityAttempt = ({
   starsEarned = 0,
   xpEarned = 0,
   mistakes = [],
-  isMasterChallenge = false
+  isMasterChallenge = false,
+  isDailyMission = false
 }) => {
   let progress = loadProgress();
   progress = updateStreak(progress);
@@ -311,7 +312,8 @@ export const recordActivityAttempt = ({
     correctCount,
     totalCount,
     accuracy,
-    isMasterChallenge: !!isMasterChallenge
+    isMasterChallenge: !!isMasterChallenge,
+    isDailyMission: !!isDailyMission
   });
 
   // Update mistake log

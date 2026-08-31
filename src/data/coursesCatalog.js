@@ -33,10 +33,50 @@ export const COURSES_CATALOG = [
     subtitle: 'Nivel Intermedio • Redacción y Cohesión',
     levelTag: 'B1 Intermedio',
     badgeIcon: 'Award',
-    unitsCount: 15,
+    unitsCount: 4,
     description: 'Enfocado en la construcción de párrafos, oraciones complejas, conectores y concordancia académica avanzada.',
     color: '#f59e0b',
     gradient: 'linear-gradient(135deg, #f59e0b, #ea580c)',
-    units: [] // Accessible via teacher packages
+    units: [
+      {
+        id: 'gwb_unit_1',
+        number: 1,
+        title: 'Unidad 1: Paragraph Structure & Topic Sentences',
+        tagline: 'Oración Principal y Soporte',
+        description: 'Aprende a estructurar un párrafo con idea principal (Topic Sentence) y oraciones de soporte.',
+        vowelSound: '/eɪ/ & /i/',
+        themeColor: '#f59e0b',
+        gradient: 'linear-gradient(135deg, #f59e0b, #ea580c)',
+        levels: [
+          {
+            id: 'gwb1_lvl1',
+            name: 'Nivel 1: Identificar la Idea Principal',
+            difficulty: 'Intermedio',
+            stars: 4,
+            xp: 40,
+            activityType: 'sentence-elements',
+            description: 'Encuentra el topic sentence en párrafos descriptivos.'
+          },
+          {
+            id: 'gwb1_lvl2',
+            name: 'Nivel 2: Conectores y Transiciones',
+            difficulty: 'Intermedio',
+            stars: 4,
+            xp: 50,
+            activityType: 'structure-builder',
+            description: 'Une ideas con First, Next, Finally y However.'
+          },
+          {
+            id: 'gwb1_lvl3',
+            name: 'Nivel 3: Cohesión y Puntuación',
+            difficulty: 'Avanzado',
+            stars: 5,
+            xp: 60,
+            activityType: 'structure-builder',
+            description: 'Construye párrafos cohesionados sin oraciones fragmentadas.'
+          }
+        ]
+      }
+    ]
   }
 ];

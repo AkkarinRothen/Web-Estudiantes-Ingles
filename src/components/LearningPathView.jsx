@@ -32,16 +32,19 @@ export default function LearningPathView({
 }) {
   const [selectedUnitId, setSelectedUnitId] = useState(null);
 
-  const units = activeCourse?.units || [];
+  const units = Array.isArray(activeCourse?.units) ? activeCourse.units : [];
 
   // Find the next recommended activity within the active course
   const getNextRecommended = () => {
+    if (!units || units.length === 0) return null;
+    
     for (const unit of units) {
-      const uProg = (progress.unitProgress && progress.unitProgress[unit.id]) || { levelsCompleted: [], mastered: false };
+      if (!unit || !Array.isArray(unit.levels)) continue;
+      const uProg = (progress?.unitProgress && progress.unitProgress[unit.id]) || { levelsCompleted: [], mastered: false };
       const completedSet = new Set(uProg.levelsCompleted || []);
       
       for (const lvl of unit.levels) {
-        if (!completedSet.has(lvl.id)) {
+        if (lvl && !completedSet.has(lvl.id)) {
           return { unit, level: lvl, isChallenge: false };
         }
       }
@@ -51,11 +54,15 @@ export default function LearningPathView({
         return { unit, level: unit.masterChallenge, isChallenge: true };
       }
     }
-    return { unit: units[0], level: units[0]?.levels?.[0], allDone: true };
+    
+    if (units.length > 0 && units[0]?.levels && units[0].levels.length > 0) {
+      return { unit: units[0], level: units[0].levels[0], allDone: true };
+    }
+    return null;
   };
 
   const nextRec = getNextRecommended();
-  const mistakesCount = (progress.mistakesLog || []).length;
+  const mistakesCount = (progress?.mistakesLog || []).length;
 
   return (
     <div className="learning-path-container animate-fade-in">
@@ -64,17 +71,17 @@ export default function LearningPathView({
         <div className="path-hero-info">
           <div className="hero-badge-row">
             <span className="hero-level-chip">
-              <Zap size={15} fill="currentColor" /> Nivel {progress.level || 1}
+              <Zap size={15} fill="currentColor" /> Nivel {progress?.level || 1}
             </span>
             <span className="hero-streak-chip">
-              <Flame size={15} fill="currentColor" /> {progress.currentStreak || 1} días de racha
+              <Flame size={15} fill="currentColor" /> {progress?.currentStreak || 1} días de racha
             </span>
             <span className="hero-level-chip" style={{ background: 'rgba(6, 182, 212, 0.3)' }}>
               <Compass size={15} /> {activeCourse?.name?.split(':')[0] || 'Curso Actual'}
             </span>
           </div>
           <h2 className="path-hero-title">
-            ¡Hola, {progress.studentName || 'Estudiante'} {progress.avatar || '🎓'}!
+            ¡Hola, {progress?.studentName || 'Estudiante'} {progress?.avatar || '🎓'}!
           </h2>
           <p className="path-hero-sub">
             {activeCourse?.name || 'Ruta de Aprendizaje'}: {activeCourse?.subtitle || 'Sigue tu plan paso a paso.'}
@@ -133,7 +140,7 @@ export default function LearningPathView({
       />
 
       {/* Recommended Next Step Callout */}
-      {nextRec && nextRec.level && (
+      {nextRec && nextRec.unit && nextRec.level && (
         <div className="recommended-card animate-pulse-gentle">
           <div className="recommended-badge">
             <Sparkles size={16} />
@@ -143,7 +150,7 @@ export default function LearningPathView({
           <div className="recommended-main-content">
             <div className="rec-text-group">
               <span className="rec-unit-tag">
-                {nextRec.unit.title} • {nextRec.isChallenge ? 'Evaluación de Dominio' : nextRec.level.difficulty}
+                {nextRec.unit.title || 'Actividad'} • {nextRec.isChallenge ? 'Evaluación de Dominio' : (nextRec.level.difficulty || 'Práctica')}
               </span>
               <h3 className="rec-level-title">{nextRec.level.name || nextRec.level.title}</h3>
               <p className="rec-level-desc">{nextRec.level.description}</p>
@@ -180,7 +187,11 @@ export default function LearningPathView({
           <button 
             type="button"
             className="btn-review-sm"
-            onClick={() => onStartLevel(units[0] || {}, { id: 'review_mistakes', name: 'Repaso de Preguntas', activityType: 'mistakes_review' })}
+            onClick={() => {
+              if (units && units.length > 0 && units[0]?.levels) {
+                onStartLevel(units[0], { id: 'review_mistakes', name: 'Repaso de Preguntas', activityType: 'mistakes_review' });
+              }
+            }}
           >
             <RotateCcw size={16} />
             <span>Repasar Ahora</span>
@@ -199,7 +210,7 @@ export default function LearningPathView({
 
       <div className="units-grid">
         {units.map((unit) => {
-          const uProg = (progress.unitProgress && progress.unitProgress[unit.id]) || { percentage: 0, levelsCompleted: [], mastered: false, challengeScore: null };
+          const uProg = (progress?.unitProgress && progress.unitProgress[unit.id]) || { percentage: 0, levelsCompleted: [], mastered: false, challengeScore: null };
           const completedSet = new Set(uProg.levelsCompleted || []);
           const allLevelsDone = completedSet.size >= (unit.levels?.length || 3);
           const isMastered = uProg.mastered;
@@ -215,8 +226,8 @@ export default function LearningPathView({
                 className="unit-card-header"
                 onClick={() => setSelectedUnitId(isExpanded ? null : unit.id)}
               >
-                <div className="unit-number-pill" style={{ background: unit.themeColor }}>
-                  Unidad {unit.number}
+                <div className="unit-number-pill" style={{ background: unit.themeColor || '#6366f1' }}>
+                  Unidad {unit.number || ''}
                 </div>
 
                 <div className="unit-header-text">
@@ -246,7 +257,7 @@ export default function LearningPathView({
                 <div className="progress-bar-container">
                   <div 
                     className="progress-bar-fill" 
-                    style={{ width: `${uProg.percentage || 0}%`, background: unit.gradient }} 
+                    style={{ width: `${uProg.percentage || 0}%`, background: unit.gradient || 'var(--primary)' }} 
                   />
                 </div>
               </div>
@@ -306,7 +317,7 @@ export default function LearningPathView({
                           <div>
                             <div className="level-name-row">
                               <strong className="level-name">{lvl.name}</strong>
-                              <span className={`diff-tag diff-${lvl.difficulty.toLowerCase()}`}>
+                              <span className={`diff-tag diff-${lvl.difficulty?.toLowerCase() || 'básico'}`}>
                                 {lvl.difficulty}
                               </span>
                             </div>
@@ -316,8 +327,8 @@ export default function LearningPathView({
 
                         <div className="level-item-right">
                           <div className="level-rewards">
-                            <span className="reward-stars"><Star size={13} fill="currentColor" /> {lvl.stars}</span>
-                            <span className="reward-xp"><Zap size={13} fill="currentColor" /> {lvl.xp} XP</span>
+                            <span className="reward-stars"><Star size={13} fill="currentColor" /> {lvl.stars || 3}</span>
+                            <span className="reward-xp"><Zap size={13} fill="currentColor" /> {lvl.xp || 30} XP</span>
                           </div>
                           <button
                             type="button"
@@ -351,8 +362,8 @@ export default function LearningPathView({
 
                       <div className="level-item-right">
                         <div className="level-rewards">
-                          <span className="reward-stars"><Star size={13} fill="currentColor" /> {unit.masterChallenge.stars}</span>
-                          <span className="reward-xp"><Zap size={13} fill="currentColor" /> {unit.masterChallenge.xp} XP</span>
+                          <span className="reward-stars"><Star size={13} fill="currentColor" /> {unit.masterChallenge.stars || 5}</span>
+                          <span className="reward-xp"><Zap size={13} fill="currentColor" /> {unit.masterChallenge.xp || 80} XP</span>
                         </div>
                         <button
                           type="button"

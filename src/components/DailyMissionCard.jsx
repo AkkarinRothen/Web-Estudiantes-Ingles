@@ -4,9 +4,9 @@ import { Sparkles, Zap, Flame, CheckCircle2, ArrowRight, ShieldCheck } from 'luc
 export default function DailyMissionCard({ progress, onStartMission }) {
   const today = new Date().toISOString().split('T')[0];
   
-  // Check if mission was already completed today in session logs
-  const isCompletedToday = (progress.sessionsLog || []).some(
-    s => s.isDailyMission && s.timestamp.startsWith(today)
+  // Safe check if mission was completed today in session logs
+  const isCompletedToday = (progress?.sessionsLog || []).some(
+    s => s && s.isDailyMission && typeof s.timestamp === 'string' && s.timestamp.startsWith(today)
   );
 
   return (
