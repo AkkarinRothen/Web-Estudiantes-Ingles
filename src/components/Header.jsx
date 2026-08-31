@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Star, Moon, Sun, Flame, Zap, Trophy } from 'lucide-react';
+import { BookOpen, Star, Moon, Sun, Flame, Zap, Trophy, Layers, GraduationCap } from 'lucide-react';
 
 export default function Header({ 
   progress, 
@@ -7,6 +7,8 @@ export default function Header({
   toggleTheme, 
   onOpenReport,
   onOpenProfiles,
+  onOpenSkillsMatrix,
+  onOpenTeacherManager,
   setActiveTab
 }) {
   return (
@@ -51,6 +53,30 @@ export default function Header({
           <Zap size={16} className="text-emerald-400" fill="currentColor" />
           <span>Nv. {progress.level || 1}</span>
         </div>
+
+        {/* Skills Matrix Button */}
+        <button
+          type="button"
+          className="header-tool-btn"
+          onClick={onOpenSkillsMatrix}
+          title="Ver Matriz de Micro-Habilidades"
+          aria-label="Matriz de Habilidades"
+        >
+          <Layers size={17} />
+          <span className="hide-mobile-sm">Habilidades</span>
+        </button>
+
+        {/* Teacher Panel Button */}
+        <button
+          type="button"
+          className="header-tool-btn"
+          onClick={onOpenTeacherManager}
+          title="Gestor Docente de Contenido y Tareas"
+          aria-label="Modo Docente"
+        >
+          <GraduationCap size={17} />
+          <span className="hide-mobile-sm">Docente</span>
+        </button>
 
         {/* Report / Stats Button */}
         <button

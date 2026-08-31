@@ -15,10 +15,10 @@ const getAudioContext = () => {
   return audioCtx;
 };
 
-export const speakText = (text, rate = 0.9) => {
+export const speakText = (text, rate = 0.9, onEnd = null) => {
   if (!('speechSynthesis' in window)) return;
   
-  // Cancel previous speech
+  // Cancel previous speech to avoid overlapping
   window.speechSynthesis.cancel();
 
   const cleanText = text.replace(/_+/g, '').trim();
@@ -26,12 +26,16 @@ export const speakText = (text, rate = 0.9) => {
 
   const utterance = new SpeechSynthesisUtterance(cleanText);
   utterance.lang = 'en-US';
-  utterance.rate = rate;
+  utterance.rate = rate; // 0.8 (slow) or 0.9 - 1.0 (normal)
 
   const voices = window.speechSynthesis.getVoices();
-  const englishVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Karen')));
+  const englishVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Zira')));
   if (englishVoice) {
     utterance.voice = englishVoice;
+  }
+
+  if (onEnd) {
+    utterance.onend = onEnd;
   }
 
   window.speechSynthesis.speak(utterance);

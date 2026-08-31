@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LEARNING_UNITS } from '../data/learningUnits';
+import DailyMissionCard from './DailyMissionCard';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -20,6 +21,7 @@ export default function LearningPathView({
   progress,
   onStartLevel,
   onStartChallenge,
+  onStartDailyMission,
   onOpenReport,
   onOpenTheory,
   onOpenVocab
@@ -66,7 +68,7 @@ export default function LearningPathView({
             ¡Hola, {progress.studentName || 'Estudiante'} {progress.avatar || '🎓'}!
           </h2>
           <p className="path-hero-sub">
-            Sigue tu ruta de inglés paso a paso o repasa los temas que más te gusten.
+            Sigue tu ruta de inglés paso a paso o entrena en tu misión diaria.
           </p>
         </div>
 
@@ -82,6 +84,12 @@ export default function LearningPathView({
           </button>
         </div>
       </div>
+
+      {/* Daily Smart Mission Card */}
+      <DailyMissionCard 
+        progress={progress} 
+        onStartMission={onStartDailyMission} 
+      />
 
       {/* Recommended Next Step Callout */}
       {nextRec && nextRec.level && (
@@ -129,6 +137,7 @@ export default function LearningPathView({
             </div>
           </div>
           <button 
+            type="button"
             className="btn-review-sm"
             onClick={() => onStartLevel(LEARNING_UNITS[0], { id: 'review_mistakes', name: 'Repaso de Preguntas', activityType: 'mistakes_review' })}
           >

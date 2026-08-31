@@ -1,0 +1,108 @@
+{
+  "filepath": "G:\\Mi unidad\\1.Educación\\0.Academia y Formación\\Literatura Inglesa I\\Ejemplos y Recursos\\Best English Grammar Book Learn English Grammar in Two Week.pdf",
+  "fast_page_ranges": true,
+  "batch_size": 15,
+  "total_pages": 143,
+  "batches": [
+    {
+      "batch": 0,
+      "start_page": 0,
+      "end_page": 14,
+      "pages": 15,
+      "seconds": 1562.389,
+      "pages_per_second": 0.01,
+      "worker_rss_mb": 3378.8,
+      "status": "completed"
+    },
+    {
+      "batch": 1,
+      "start_page": 15,
+      "end_page": 29,
+      "pages": 15,
+      "seconds": 1510.334,
+      "pages_per_second": 0.01,
+      "worker_rss_mb": 4687.1,
+      "status": "completed"
+    },
+    {
+      "batch": 2,
+      "start_page": 30,
+      "end_page": 44,
+      "pages": 15,
+      "seconds": 1411.306,
+      "pages_per_second": 0.011,
+      "worker_rss_mb": 4770.8,
+      "status": "completed"
+    },
+    {
+      "batch": 3,
+      "start_page": 45,
+      "end_page": 59,
+      "pages": 15,
+      "seconds": 814.248,
+      "pages_per_second": 0.018,
+      "worker_rss_mb": 6810.8,
+      "status": "completed"
+    },
+    {
+      "batch": 4,
+      "start_page": 60,
+      "end_page": 74,
+      "pages": 15,
+      "seconds": 606.624,
+      "pages_per_second": 0.025,
+      "worker_rss_mb": 5289.9,
+      "status": "completed"
+    },
+    {
+      "batch": 5,
+      "start_page": 75,
+      "end_page": 89,
+      "pages": 15,
+      "seconds": 1008.633,
+      "pages_per_second": 0.015,
+      "worker_rss_mb": 5366.9,
+      "status": "completed"
+    },
+    {
+      "batch": 6,
+      "start_page": 90,
+      "end_page": 104,
+      "pages": 15,
+      "seconds": 868.5,
+      "pages_per_second": 0.017,
+      "worker_rss_mb": 6201.2,
+      "status": "completed"
+    },
+    {
+      "batch": 7,
+      "start_page": 105,
+      "end_page": 119,
+      "pages": 15,
+      "seconds": 1093.773,
+      "pages_per_second": 0.014,
+      "worker_rss_mb": 6968.8,
+      "status": "completed"
+    },
+    {
+      "batch": 8,
+      "start_page": 120,
+      "end_page": 134,
+      "pages": 15,
+      "seconds": 1115.981,
+      "pages_per_second": 0.013,
+      "worker_rss_mb": 5623.2,
+      "status": "completed"
+    },
+    {
+      "batch": 9,
+      "start_page": 135,
+      "end_page": 142,
+      "pages": 8,
+      "seconds": 693.231,
+      "pages_per_second": 0.012,
+      "worker_rss_mb": 5201.1,
+      "status": "completed"
+    }
+  ]
+}

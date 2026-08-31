@@ -1,0 +1,178 @@
+{
+  "filepath": "C:\\Users\\Giise\\Descargas\\Grammar for Great Writing B -- KEITH S_FOLSE -- Grammar for great writing, 2017 -- fb45d982c5a7cf0b7d0dad4651fbcca8 -- Anna’s Archive.pdf",
+  "fast_page_ranges": true,
+  "batch_size": 15,
+  "total_pages": 242,
+  "batches": [
+    {
+      "batch": 0,
+      "start_page": 0,
+      "end_page": 14,
+      "pages": 15,
+      "seconds": 994.852,
+      "pages_per_second": 0.015,
+      "worker_rss_mb": 6154.6,
+      "status": "completed"
+    },
+    {
+      "batch": 1,
+      "start_page": 15,
+      "end_page": 29,
+      "pages": 15,
+      "seconds": 664.336,
+      "pages_per_second": 0.023,
+      "worker_rss_mb": 5138.1,
+      "status": "completed"
+    },
+    {
+      "batch": 2,
+      "start_page": 30,
+      "end_page": 44,
+      "pages": 15,
+      "seconds": 625.873,
+      "pages_per_second": 0.024,
+      "worker_rss_mb": 5025.8,
+      "status": "completed"
+    },
+    {
+      "batch": 3,
+      "start_page": 45,
+      "end_page": 59,
+      "pages": 15,
+      "seconds": 621.891,
+      "pages_per_second": 0.024,
+      "worker_rss_mb": 4909.2,
+      "status": "completed"
+    },
+    {
+      "batch": 4,
+      "start_page": 60,
+      "end_page": 74,
+      "pages": 15,
+      "seconds": 618.531,
+      "pages_per_second": 0.024,
+      "worker_rss_mb": 4645.6,
+      "status": "completed"
+    },
+    {
+      "batch": 5,
+      "start_page": 75,
+      "end_page": 89,
+      "pages": 15,
+      "seconds": 616.969,
+      "pages_per_second": 0.024,
+      "worker_rss_mb": 4650.6,
+      "status": "completed"
+    },
+    {
+      "batch": 6,
+      "start_page": 90,
+      "end_page": 104,
+      "pages": 15,
+      "seconds": 1096.585,
+      "pages_per_second": 0.014,
+      "worker_rss_mb": 3531.9,
+      "status": "completed"
+    },
+    {
+      "batch": 7,
+      "start_page": 105,
+      "end_page": 119,
+      "pages": 15,
+      "seconds": 956.064,
+      "pages_per_second": 0.016,
+      "worker_rss_mb": 6940.2,
+      "status": "completed"
+    },
+    {
+      "batch": 8,
+      "start_page": 120,
+      "end_page": 134,
+      "pages": 15,
+      "seconds": 626.91,
+      "pages_per_second": 0.024,
+      "worker_rss_mb": 5098.7,
+      "status": "completed"
+    },
+    {
+      "batch": 9,
+      "start_page": 135,
+      "end_page": 149,
+      "pages": 15,
+      "seconds": 743.917,
+      "pages_per_second": 0.02,
+      "worker_rss_mb": 6881.3,
+      "status": "completed"
+    },
+    {
+      "batch": 10,
+      "start_page": 150,
+      "end_page": 164,
+      "pages": 15,
+      "seconds": 663.025,
+      "pages_per_second": 0.023,
+      "worker_rss_mb": 6887.2,
+      "status": "completed"
+    },
+    {
+      "batch": 11,
+      "start_page": 165,
+      "end_page": 179,
+      "pages": 15,
+      "seconds": 922.17,
+      "pages_per_second": 0.016,
+      "worker_rss_mb": 6858.9,
+      "status": "completed"
+    },
+    {
+      "batch": 12,
+      "start_page": 180,
+      "end_page": 194,
+      "pages": 15,
+      "seconds": 626.061,
+      "pages_per_second": 0.024,
+      "worker_rss_mb": 6855.9,
+      "status": "completed"
+    },
+    {
+      "batch": 13,
+      "start_page": 195,
+      "end_page": 209,
+      "pages": 15,
+      "seconds": 643.462,
+      "pages_per_second": 0.023,
+      "worker_rss_mb": 6879.2,
+      "status": "completed"
+    },
+    {
+      "batch": 14,
+      "start_page": 210,
+      "end_page": 224,
+      "pages": 15,
+      "seconds": 638.797,
+      "pages_per_second": 0.023,
+      "worker_rss_mb": 6894.8,
+      "status": "completed"
+    },
+    {
+      "batch": 15,
+      "start_page": 225,
+      "end_page": 239,
+      "pages": 15,
+      "seconds": 647.817,
+      "pages_per_second": 0.023,
+      "worker_rss_mb": 6032.6,
+      "status": "completed"
+    },
+    {
+      "batch": 16,
+      "start_page": 240,
+      "end_page": 241,
+      "pages": 2,
+      "seconds": 87.812,
+      "pages_per_second": 0.023,
+      "worker_rss_mb": 5799.4,
+      "status": "completed"
+    }
+  ]
+}

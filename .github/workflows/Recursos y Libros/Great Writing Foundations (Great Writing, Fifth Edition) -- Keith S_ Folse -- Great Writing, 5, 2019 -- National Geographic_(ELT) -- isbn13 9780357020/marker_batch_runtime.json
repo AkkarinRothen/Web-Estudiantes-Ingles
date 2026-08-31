@@ -1,0 +1,188 @@
+{
+  "filepath": "G:\\Mi unidad\\1.Educación\\0.Academia y Formación\\Literatura Inglesa I\\Ejemplos y Recursos\\Great Writing Foundations (Great Writing, Fifth Edition) -- Keith S_ Folse -- Great Writing, 5, 2019 -- National Geographic_(ELT) -- isbn13 9780357020.pdf",
+  "fast_page_ranges": true,
+  "batch_size": 15,
+  "total_pages": 257,
+  "batches": [
+    {
+      "batch": 0,
+      "start_page": 0,
+      "end_page": 14,
+      "pages": 15,
+      "seconds": 4943.395,
+      "pages_per_second": 0.003,
+      "worker_rss_mb": 5277.8,
+      "status": "completed"
+    },
+    {
+      "batch": 1,
+      "start_page": 15,
+      "end_page": 29,
+      "pages": 15,
+      "seconds": 2431.637,
+      "pages_per_second": 0.006,
+      "worker_rss_mb": 5907.3,
+      "status": "completed"
+    },
+    {
+      "batch": 2,
+      "start_page": 30,
+      "end_page": 44,
+      "pages": 15,
+      "seconds": 2943.252,
+      "pages_per_second": 0.005,
+      "worker_rss_mb": 5959.3,
+      "status": "completed"
+    },
+    {
+      "batch": 3,
+      "start_page": 45,
+      "end_page": 59,
+      "pages": 15,
+      "seconds": 3350.136,
+      "pages_per_second": 0.004,
+      "worker_rss_mb": 5602.9,
+      "status": "completed"
+    },
+    {
+      "batch": 4,
+      "start_page": 60,
+      "end_page": 74,
+      "pages": 15,
+      "seconds": 3196.814,
+      "pages_per_second": 0.005,
+      "worker_rss_mb": 3151.8,
+      "status": "completed"
+    },
+    {
+      "batch": 5,
+      "start_page": 75,
+      "end_page": 89,
+      "pages": 15,
+      "seconds": 3360.406,
+      "pages_per_second": 0.004,
+      "worker_rss_mb": 4291.0,
+      "status": "completed"
+    },
+    {
+      "batch": 6,
+      "start_page": 90,
+      "end_page": 104,
+      "pages": 15,
+      "seconds": 4127.738,
+      "pages_per_second": 0.004,
+      "worker_rss_mb": 3164.2,
+      "status": "completed"
+    },
+    {
+      "batch": 7,
+      "start_page": 105,
+      "end_page": 119,
+      "pages": 15,
+      "seconds": 3944.043,
+      "pages_per_second": 0.004,
+      "worker_rss_mb": 3726.4,
+      "status": "completed"
+    },
+    {
+      "batch": 8,
+      "start_page": 120,
+      "end_page": 134,
+      "pages": 15,
+      "seconds": 4062.649,
+      "pages_per_second": 0.004,
+      "worker_rss_mb": 3155.8,
+      "status": "completed"
+    },
+    {
+      "batch": 9,
+      "start_page": 135,
+      "end_page": 149,
+      "pages": 15,
+      "seconds": 4071.39,
+      "pages_per_second": 0.004,
+      "worker_rss_mb": 3507.2,
+      "status": "completed"
+    },
+    {
+      "batch": 10,
+      "start_page": 150,
+      "end_page": 164,
+      "pages": 15,
+      "seconds": 3716.448,
+      "pages_per_second": 0.004,
+      "worker_rss_mb": 3724.9,
+      "status": "completed"
+    },
+    {
+      "batch": 11,
+      "start_page": 165,
+      "end_page": 179,
+      "pages": 15,
+      "seconds": 3614.541,
+      "pages_per_second": 0.004,
+      "worker_rss_mb": 5480.4,
+      "status": "completed"
+    },
+    {
+      "batch": 12,
+      "start_page": 180,
+      "end_page": 194,
+      "pages": 15,
+      "seconds": 3185.346,
+      "pages_per_second": 0.005,
+      "worker_rss_mb": 5920.5,
+      "status": "completed"
+    },
+    {
+      "batch": 13,
+      "start_page": 195,
+      "end_page": 209,
+      "pages": 15,
+      "seconds": 3509.892,
+      "pages_per_second": 0.004,
+      "worker_rss_mb": 5521.0,
+      "status": "completed"
+    },
+    {
+      "batch": 14,
+      "start_page": 210,
+      "end_page": 224,
+      "pages": 15,
+      "seconds": 4003.1,
+      "pages_per_second": 0.004,
+      "worker_rss_mb": 4708.3,
+      "status": "completed"
+    },
+    {
+      "batch": 15,
+      "start_page": 225,
+      "end_page": 239,
+      "pages": 15,
+      "seconds": 3651.014,
+      "pages_per_second": 0.004,
+      "worker_rss_mb": 3745.8,
+      "status": "completed"
+    },
+    {
+      "batch": 16,
+      "start_page": 240,
+      "end_page": 254,
+      "pages": 15,
+      "seconds": 6281.208,
+      "pages_per_second": 0.002,
+      "worker_rss_mb": 3156.6,
+      "status": "completed"
+    },
+    {
+      "batch": 17,
+      "start_page": 255,
+      "end_page": 256,
+      "pages": 2,
+      "seconds": 2925.074,
+      "pages_per_second": 0.001,
+      "worker_rss_mb": 3110.1,
+      "status": "completed"
+    }
+  ]
+}

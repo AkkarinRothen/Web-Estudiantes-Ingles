@@ -7,7 +7,10 @@ import ActivitiesModule from './components/ActivitiesModule';
 import ProgressReportModal from './components/ProgressReportModal';
 import ProfileManagerModal from './components/common/ProfileManagerModal';
 import WelcomeOnboardingModal from './components/common/WelcomeOnboardingModal';
+import SkillsMatrixModal from './components/SkillsMatrixModal';
+import TeacherContentManager from './components/teacher/TeacherContentManager';
 import UnitChallengeActivity from './components/activities/UnitChallengeActivity';
+import AdaptiveDrillActivity from './components/activities/AdaptiveDrillActivity';
 import { 
   loadProgress, 
   saveProgress, 
@@ -16,22 +19,26 @@ import {
   hasSeenOnboarding,
   markOnboardingAsSeen
 } from './utils/progressStore';
+import { generateDailyMission, generateSkillDrill } from './utils/adaptiveEngine';
 import { Compass, BookOpen, GraduationCap, Gamepad2 } from 'lucide-react';
 import { LEARNING_UNITS } from './data/learningUnits';
 
 export default function App() {
-  // Navigation tab: 'path' (Mi Ruta), 'vocab', 'theory', 'activities', 'challenge'
+  // Navigation tab: 'path' (Mi Ruta), 'vocab', 'theory', 'activities', 'challenge', 'adaptive-drill', 'teacher'
   const [activeTab, setActiveTab] = useState('path');
   
   // Progress & Gamification state
   const [progress, setProgress] = useState(loadProgress);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isProfilesOpen, setIsProfilesOpen] = useState(false);
+  const [isSkillsMatrixOpen, setIsSkillsMatrixOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => !hasSeenOnboarding());
 
-  // Active level or challenge context
+  // Active level, challenge or adaptive drill context
   const [guidedContext, setGuidedContext] = useState(null); // { unit, level }
   const [activeChallengeUnit, setActiveChallengeUnit] = useState(null);
+  const [adaptiveDrillData, setAdaptiveDrillData] = useState(null);
+
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedTheoryId, setSelectedTheoryId] = useState(null);
   const [activityFilterType, setActivityFilterType] = useState(null);
@@ -58,6 +65,7 @@ export default function App() {
       if (e.key === 'Escape') {
         setIsReportOpen(false);
         setIsProfilesOpen(false);
+        setIsSkillsMatrixOpen(false);
         setIsOnboardingOpen(false);
       }
     };
@@ -129,13 +137,43 @@ export default function App() {
     setActiveTab('challenge');
   };
 
+  // Launching Adaptive Daily Mission
+  const handleStartDailyMission = () => {
+    const mission = generateDailyMission(progress);
+    setAdaptiveDrillData({
+      ...mission,
+      isDailyMission: true
+    });
+    setActiveTab('adaptive-drill');
+  };
+
+  // Launching Targeted Skill Drill
+  const handleStartSkillDrill = (skillId) => {
+    const drill = generateSkillDrill(skillId);
+    setAdaptiveDrillData(drill);
+    setActiveTab('adaptive-drill');
+  };
+
+  // Launching Teacher Custom Package
+  const handleLaunchCustomPackage = (pkg) => {
+    setAdaptiveDrillData({
+      id: pkg.id,
+      title: pkg.title,
+      description: `Tarea de ${pkg.author || 'Docente'}`,
+      questions: pkg.items || [],
+      xpReward: (pkg.items?.length || 5) * 20,
+      starsReward: 5
+    });
+    setActiveTab('adaptive-drill');
+  };
+
   // Activity or Challenge Completion Handler
   const handleActivityComplete = (result) => {
     if (!result) return;
-    const { activityId, correctCount, totalCount, starsEarned, xpEarned, mistakes, isMasterChallenge } = result;
+    const { activityId, correctCount, totalCount, starsEarned, xpEarned, mistakes, isMasterChallenge, isDailyMission } = result;
 
     const unitId = guidedContext?.unit?.id || activeChallengeUnit?.id;
-    const levelId = guidedContext?.level?.id || activeChallengeUnit?.masterChallenge?.id;
+    const levelId = guidedContext?.level?.id || activeChallengeUnit?.masterChallenge?.id || adaptiveDrillData?.id;
 
     const updated = recordActivityAttempt({
       unitId,
@@ -146,7 +184,8 @@ export default function App() {
       starsEarned,
       xpEarned,
       mistakes,
-      isMasterChallenge
+      isMasterChallenge,
+      isDailyMission
     });
 
     setProgress(updated);
@@ -168,6 +207,7 @@ export default function App() {
   const handleBackToPath = () => {
     setGuidedContext(null);
     setActiveChallengeUnit(null);
+    setAdaptiveDrillData(null);
     setActiveTab('path');
   };
 
@@ -179,6 +219,8 @@ export default function App() {
         toggleTheme={toggleTheme} 
         onOpenReport={() => setIsReportOpen(true)}
         onOpenProfiles={() => setIsProfilesOpen(true)}
+        onOpenSkillsMatrix={() => setIsSkillsMatrixOpen(true)}
+        onOpenTeacherManager={() => setActiveTab('teacher')}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
       />
@@ -190,6 +232,7 @@ export default function App() {
           onClick={() => {
             setGuidedContext(null);
             setActiveChallengeUnit(null);
+            setAdaptiveDrillData(null);
             setActiveTab('path');
           }} 
           className={`nav-tab ${activeTab === 'path' ? 'active' : ''}`}
@@ -242,6 +285,7 @@ export default function App() {
             progress={progress}
             onStartLevel={handleStartLevel}
             onStartChallenge={handleStartChallenge}
+            onStartDailyMission={handleStartDailyMission}
             onOpenReport={() => setIsReportOpen(true)}
             onOpenTheory={(theoryId) => {
               setSelectedTheoryId(theoryId);
@@ -306,16 +350,35 @@ export default function App() {
             />
           </div>
         )}
+
+        {activeTab === 'adaptive-drill' && adaptiveDrillData && (
+          <div className="unit-challenge-page animate-fade-in">
+            <AdaptiveDrillActivity
+              drillData={adaptiveDrillData}
+              addStars={addStars}
+              onComplete={handleActivityComplete}
+              onBackToPath={handleBackToPath}
+            />
+          </div>
+        )}
+
+        {activeTab === 'teacher' && (
+          <TeacherContentManager
+            onBackToStudentView={handleBackToPath}
+            onLaunchCustomPackage={handleLaunchCustomPackage}
+          />
+        )}
       </main>
 
       {/* Mobile Fixed Bottom Navigation Bar */}
       <nav className="mobile-bottom-nav">
         <button
           type="button"
-          className={`bottom-nav-item ${activeTab === 'path' || activeTab === 'challenge' ? 'active' : ''}`}
+          className={`bottom-nav-item ${activeTab === 'path' || activeTab === 'challenge' || activeTab === 'adaptive-drill' ? 'active' : ''}`}
           onClick={() => {
             setGuidedContext(null);
             setActiveChallengeUnit(null);
+            setAdaptiveDrillData(null);
             setActiveTab('path');
           }}
           aria-label="Mi Ruta"
@@ -372,6 +435,15 @@ export default function App() {
         />
       )}
 
+      {/* Skills Matrix Modal */}
+      {isSkillsMatrixOpen && (
+        <SkillsMatrixModal
+          progress={progress}
+          onClose={() => setIsSkillsMatrixOpen(false)}
+          onStartSkillDrill={handleStartSkillDrill}
+        />
+      )}
+
       {/* Progress & Report Modal */}
       {isReportOpen && (
         <ProgressReportModal 
@@ -384,7 +456,6 @@ export default function App() {
       {/* Profile Manager Modal */}
       {isProfilesOpen && (
         <ProfileManagerModal
-          currentProfile={progress}
           onClose={() => setIsProfilesOpen(false)}
           onProfileChanged={handleProfileChanged}
         />
