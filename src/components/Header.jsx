@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Star, Moon, Sun, Flame, Zap, Trophy, Layers, GraduationCap } from 'lucide-react';
+import { BookOpen, Star, Moon, Sun, Flame, Zap, Trophy, Layers, GraduationCap, Headphones } from 'lucide-react';
 
 export default function Header({ 
   progress, 
@@ -8,6 +8,8 @@ export default function Header({
   onOpenReport,
   onOpenProfiles,
   onOpenSkillsMatrix,
+  onOpenPhonetics,
+  onOpenCoursesCatalog,
   onOpenTeacherManager,
   setActiveTab
 }) {
@@ -19,7 +21,7 @@ export default function Header({
         </div>
         <div>
           <h1 className="brand-title">English Practice</h1>
-          <p className="brand-subtitle">Ruta de Aprendizaje • Nivel Primario/Secundario</p>
+          <p className="brand-subtitle">Ruta Curricular • Nivel Primario/Secundario</p>
         </div>
       </div>
 
@@ -53,6 +55,31 @@ export default function Header({
           <Zap size={16} className="text-emerald-400" fill="currentColor" />
           <span>Nv. {progress.level || 1}</span>
         </div>
+
+        {/* Phonetics Lab Button */}
+        <button
+          type="button"
+          className="header-tool-btn"
+          onClick={onOpenPhonetics}
+          title="Laboratorio de Fonética & Pronunciación"
+          aria-label="Laboratorio de Fonética"
+          style={{ borderColor: 'rgba(6, 182, 212, 0.4)', color: '#0891b2' }}
+        >
+          <Headphones size={17} />
+          <span className="hide-mobile-sm">Fonética</span>
+        </button>
+
+        {/* Courses Catalog Button */}
+        <button
+          type="button"
+          className="header-tool-btn"
+          onClick={onOpenCoursesCatalog}
+          title="Catálogo de Cursos y Libros"
+          aria-label="Catálogo de Cursos"
+        >
+          <BookOpen size={17} />
+          <span className="hide-mobile-sm">Cursos</span>
+        </button>
 
         {/* Skills Matrix Button */}
         <button

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { LEARNING_UNITS } from '../data/learningUnits';
 import DailyMissionCard from './DailyMissionCard';
 import { 
   Sparkles, 
@@ -14,23 +13,30 @@ import {
   Trophy, 
   RotateCcw, 
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  Headphones,
+  Compass
 } from 'lucide-react';
 
 export default function LearningPathView({
   progress,
+  activeCourse,
   onStartLevel,
   onStartChallenge,
   onStartDailyMission,
   onOpenReport,
   onOpenTheory,
-  onOpenVocab
+  onOpenVocab,
+  onOpenPhonetics,
+  onOpenCoursesCatalog
 }) {
   const [selectedUnitId, setSelectedUnitId] = useState(null);
 
-  // Find the next recommended activity
+  const units = activeCourse?.units || [];
+
+  // Find the next recommended activity within the active course
   const getNextRecommended = () => {
-    for (const unit of LEARNING_UNITS) {
+    for (const unit of units) {
       const uProg = (progress.unitProgress && progress.unitProgress[unit.id]) || { levelsCompleted: [], mastered: false };
       const completedSet = new Set(uProg.levelsCompleted || []);
       
@@ -45,7 +51,7 @@ export default function LearningPathView({
         return { unit, level: unit.masterChallenge, isChallenge: true };
       }
     }
-    return { unit: LEARNING_UNITS[0], level: LEARNING_UNITS[0].levels[0], allDone: true };
+    return { unit: units[0], level: units[0]?.levels?.[0], allDone: true };
   };
 
   const nextRec = getNextRecommended();
@@ -63,12 +69,15 @@ export default function LearningPathView({
             <span className="hero-streak-chip">
               <Flame size={15} fill="currentColor" /> {progress.currentStreak || 1} días de racha
             </span>
+            <span className="hero-level-chip" style={{ background: 'rgba(6, 182, 212, 0.3)' }}>
+              <Compass size={15} /> {activeCourse?.name?.split(':')[0] || 'Curso Actual'}
+            </span>
           </div>
           <h2 className="path-hero-title">
             ¡Hola, {progress.studentName || 'Estudiante'} {progress.avatar || '🎓'}!
           </h2>
           <p className="path-hero-sub">
-            Sigue tu ruta de inglés paso a paso o entrena en tu misión diaria.
+            {activeCourse?.name || 'Ruta de Aprendizaje'}: {activeCourse?.subtitle || 'Sigue tu plan paso a paso.'}
           </p>
         </div>
 
@@ -76,13 +85,45 @@ export default function LearningPathView({
           <button 
             type="button" 
             className="btn-glass-report"
+            onClick={onOpenCoursesCatalog}
+            title="Cambiar o explorar catálogo de cursos"
+          >
+            <BookOpen size={16} className="text-cyan-300" />
+            <span>Cambiar Curso</span>
+          </button>
+
+          <button 
+            type="button" 
+            className="btn-glass-report"
             onClick={onOpenReport}
             title="Ver estadísticas e informe"
           >
-            <Trophy size={18} className="text-amber-400" />
-            <span>Mi Informe & Logros</span>
+            <Trophy size={16} className="text-amber-400" />
+            <span>Mi Informe</span>
           </button>
         </div>
+      </div>
+
+      {/* Quick Access to Phonetics Lab Banner */}
+      <div className="phonetics-callout-banner animate-fade-in" onClick={onOpenPhonetics} style={{ cursor: 'pointer' }}>
+        <div className="flex items-center gap-3">
+          <div className="phonetics-callout-icon">
+            <Headphones size={24} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <strong className="text-sm font-bold text-cyan-700">Laboratorio de Fonética & Pronunciación 🗣️</strong>
+              <span className="diff-tag diff-básico">14 Sonidos Vocálicos</span>
+            </div>
+            <p className="text-xs text-secondary mt-0.5">
+              Entrena sonidos del inglés (/æ/, /ɛ/, /ɪ/, etc.), pares mínimos y graba tu propia voz.
+            </p>
+          </div>
+        </div>
+        <button type="button" className="btn-drill-action" style={{ background: '#06b6d4', color: '#fff', border: 'none' }}>
+          <span>Abrir Lab</span>
+          <ArrowRight size={14} />
+        </button>
       </div>
 
       {/* Daily Smart Mission Card */}
@@ -139,7 +180,7 @@ export default function LearningPathView({
           <button 
             type="button"
             className="btn-review-sm"
-            onClick={() => onStartLevel(LEARNING_UNITS[0], { id: 'review_mistakes', name: 'Repaso de Preguntas', activityType: 'mistakes_review' })}
+            onClick={() => onStartLevel(units[0] || {}, { id: 'review_mistakes', name: 'Repaso de Preguntas', activityType: 'mistakes_review' })}
           >
             <RotateCcw size={16} />
             <span>Repasar Ahora</span>
@@ -147,20 +188,20 @@ export default function LearningPathView({
         </div>
       )}
 
-      {/* 4 Thematic Progressive Units Grid */}
+      {/* Units Grid */}
       <div className="units-section-header">
         <h3 className="section-title">
           <BookOpen size={20} className="text-indigo-500" />
-          <span>Unidades de Aprendizaje (Ruta Guiada)</span>
+          <span>Unidades del Curso: {activeCourse?.name || 'Ruta Guiada'}</span>
         </h3>
-        <p className="section-desc">Completa los 3 niveles y supera el Desafío Integrador Final.</p>
+        <p className="section-desc">Completa los niveles de cada unidad y desbloquea el Desafío Integrador.</p>
       </div>
 
       <div className="units-grid">
-        {LEARNING_UNITS.map((unit) => {
+        {units.map((unit) => {
           const uProg = (progress.unitProgress && progress.unitProgress[unit.id]) || { percentage: 0, levelsCompleted: [], mastered: false, challengeScore: null };
           const completedSet = new Set(uProg.levelsCompleted || []);
-          const allLevelsDone = completedSet.size >= 3;
+          const allLevelsDone = completedSet.size >= (unit.levels?.length || 3);
           const isMastered = uProg.mastered;
           const isExpanded = selectedUnitId === unit.id;
 
@@ -179,7 +220,14 @@ export default function LearningPathView({
                 </div>
 
                 <div className="unit-header-text">
-                  <h4 className="unit-title">{unit.title}</h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="unit-title">{unit.title}</h4>
+                    {unit.vowelSound && (
+                      <span className="diff-tag diff-intermedio" title="Sonido Vocálico de la Unidad">
+                        🗣️ {unit.vowelSound}
+                      </span>
+                    )}
+                  </div>
                   <span className="unit-tagline">{unit.tagline}</span>
                 </div>
 
@@ -209,6 +257,17 @@ export default function LearningPathView({
 
                 {/* Quick helpers */}
                 <div className="unit-helpers-row">
+                  {unit.vowelSound && (
+                    <button
+                      type="button"
+                      className="btn-unit-helper"
+                      onClick={onOpenPhonetics}
+                      style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#0891b2' }}
+                    >
+                      <Headphones size={14} />
+                      <span>Sonido Vocálico: {unit.vowelSound}</span>
+                    </button>
+                  )}
                   {unit.vocabCategory && onOpenVocab && (
                     <button 
                       type="button" 
@@ -216,7 +275,7 @@ export default function LearningPathView({
                       onClick={() => onOpenVocab(unit.vocabCategory)}
                     >
                       <BookOpen size={14} />
-                      <span>Vocabulario de la Unidad</span>
+                      <span>Vocabulario</span>
                     </button>
                   )}
                   {unit.grammarId && onOpenTheory && (
@@ -231,9 +290,9 @@ export default function LearningPathView({
                   )}
                 </div>
 
-                {/* 3 Difficulty Levels */}
+                {/* Difficulty Levels */}
                 <div className="levels-wrapper">
-                  {unit.levels.map((lvl) => {
+                  {unit.levels?.map((lvl) => {
                     const isDone = completedSet.has(lvl.id);
                     return (
                       <div 

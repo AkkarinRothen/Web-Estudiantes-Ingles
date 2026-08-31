@@ -8,6 +8,8 @@ import ProgressReportModal from './components/ProgressReportModal';
 import ProfileManagerModal from './components/common/ProfileManagerModal';
 import WelcomeOnboardingModal from './components/common/WelcomeOnboardingModal';
 import SkillsMatrixModal from './components/SkillsMatrixModal';
+import PhoneticsLabModal from './components/phonetics/PhoneticsLabModal';
+import CoursesCatalogModal from './components/CoursesCatalogModal';
 import TeacherContentManager from './components/teacher/TeacherContentManager';
 import UnitChallengeActivity from './components/activities/UnitChallengeActivity';
 import AdaptiveDrillActivity from './components/activities/AdaptiveDrillActivity';
@@ -20,8 +22,8 @@ import {
   markOnboardingAsSeen
 } from './utils/progressStore';
 import { generateDailyMission, generateSkillDrill } from './utils/adaptiveEngine';
-import { Compass, BookOpen, GraduationCap, Gamepad2 } from 'lucide-react';
-import { LEARNING_UNITS } from './data/learningUnits';
+import { COURSES_CATALOG } from './data/coursesCatalog';
+import { Compass, BookOpen, GraduationCap, Gamepad2, Headphones } from 'lucide-react';
 
 export default function App() {
   // Navigation tab: 'path' (Mi Ruta), 'vocab', 'theory', 'activities', 'challenge', 'adaptive-drill', 'teacher'
@@ -32,7 +34,16 @@ export default function App() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isProfilesOpen, setIsProfilesOpen] = useState(false);
   const [isSkillsMatrixOpen, setIsSkillsMatrixOpen] = useState(false);
+  const [isPhoneticsOpen, setIsPhoneticsOpen] = useState(false);
+  const [isCoursesCatalogOpen, setIsCoursesCatalogOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => !hasSeenOnboarding());
+
+  // Active course state: 'starter_4u', 'foundations_14u', 'writing_b'
+  const [activeCourseId, setActiveCourseId] = useState(() => {
+    return localStorage.getItem('english_active_course_id') || 'starter_4u';
+  });
+
+  const activeCourse = COURSES_CATALOG.find(c => c.id === activeCourseId) || COURSES_CATALOG[0];
 
   // Active level, challenge or adaptive drill context
   const [guidedContext, setGuidedContext] = useState(null); // { unit, level }
@@ -66,6 +77,8 @@ export default function App() {
         setIsReportOpen(false);
         setIsProfilesOpen(false);
         setIsSkillsMatrixOpen(false);
+        setIsPhoneticsOpen(false);
+        setIsCoursesCatalogOpen(false);
         setIsOnboardingOpen(false);
       }
     };
@@ -75,6 +88,15 @@ export default function App() {
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  const handleSelectCourse = (courseId) => {
+    setActiveCourseId(courseId);
+    localStorage.setItem('english_active_course_id', courseId);
+    setGuidedContext(null);
+    setActiveChallengeUnit(null);
+    setAdaptiveDrillData(null);
+    setActiveTab('path');
   };
 
   const addStars = (count = 1) => {
@@ -195,7 +217,7 @@ export default function App() {
   const handleStartFirstLessonFromOnboarding = () => {
     markOnboardingAsSeen();
     setIsOnboardingOpen(false);
-    handleStartLevel(LEARNING_UNITS[0], LEARNING_UNITS[0].levels[0]);
+    handleStartLevel(activeCourse.units[0], activeCourse.units[0]?.levels?.[0]);
   };
 
   const handleCloseOnboarding = () => {
@@ -220,6 +242,8 @@ export default function App() {
         onOpenReport={() => setIsReportOpen(true)}
         onOpenProfiles={() => setIsProfilesOpen(true)}
         onOpenSkillsMatrix={() => setIsSkillsMatrixOpen(true)}
+        onOpenPhonetics={() => setIsPhoneticsOpen(true)}
+        onOpenCoursesCatalog={() => setIsCoursesCatalogOpen(true)}
         onOpenTeacherManager={() => setActiveTab('teacher')}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -239,6 +263,15 @@ export default function App() {
         >
           <Compass size={18} />
           <span>Mi Ruta Guiada</span>
+        </button>
+
+        <button 
+          type="button"
+          onClick={() => setIsPhoneticsOpen(true)}
+          className="nav-tab"
+        >
+          <Headphones size={18} />
+          <span>Fonética & Audio</span>
         </button>
 
         <button 
@@ -283,10 +316,13 @@ export default function App() {
         {activeTab === 'path' && (
           <LearningPathView 
             progress={progress}
+            activeCourse={activeCourse}
             onStartLevel={handleStartLevel}
             onStartChallenge={handleStartChallenge}
             onStartDailyMission={handleStartDailyMission}
             onOpenReport={() => setIsReportOpen(true)}
+            onOpenPhonetics={() => setIsPhoneticsOpen(true)}
+            onOpenCoursesCatalog={() => setIsCoursesCatalogOpen(true)}
             onOpenTheory={(theoryId) => {
               setSelectedTheoryId(theoryId);
               setActiveTab('theory');
@@ -389,6 +425,16 @@ export default function App() {
 
         <button
           type="button"
+          className="bottom-nav-item"
+          onClick={() => setIsPhoneticsOpen(true)}
+          aria-label="Fonética"
+        >
+          <Headphones size={22} />
+          <span>Fonética</span>
+        </button>
+
+        <button
+          type="button"
           className={`bottom-nav-item ${activeTab === 'vocab' ? 'active' : ''}`}
           onClick={() => {
             setSelectedCategory('ALL');
@@ -441,6 +487,22 @@ export default function App() {
           progress={progress}
           onClose={() => setIsSkillsMatrixOpen(false)}
           onStartSkillDrill={handleStartSkillDrill}
+        />
+      )}
+
+      {/* Phonetics Lab Modal */}
+      {isPhoneticsOpen && (
+        <PhoneticsLabModal
+          onClose={() => setIsPhoneticsOpen(false)}
+        />
+      )}
+
+      {/* Courses Catalog Modal */}
+      {isCoursesCatalogOpen && (
+        <CoursesCatalogModal
+          activeCourseId={activeCourseId}
+          onSelectCourse={handleSelectCourse}
+          onClose={() => setIsCoursesCatalogOpen(false)}
         />
       )}
 
